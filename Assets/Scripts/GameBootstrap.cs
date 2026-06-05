@@ -18,11 +18,12 @@ namespace WildlifeAdventure
         [Tooltip("On-screen scale of Wira the Hornbill.")]
         public float playerScale = 0.65f;
 
-        [Header("Firebase (leave blank to play offline)")]
+        [Header("Firebase Configuration")]
         [Tooltip("Firebase Web API Key (Project Settings > General > Web API Key).")]
-        public string firebaseApiKey = "";
+        public string firebaseApiKey = "AIzaSyDk59zhzuz-4JHjKjuYVQ7MC_aImrZimlA";
+
         [Tooltip("Firebase Project ID (Project Settings > General > Project ID).")]
-        public string firebaseProjectId = "";
+        public string firebaseProjectId = "wildlife-awareness-game";
 
         void Awake()
         {
@@ -48,7 +49,7 @@ namespace WildlifeAdventure
             var hud      = MakeModule<HUDController>("HUD");
             var factCard = MakeModule<FactCardUI>("FactCard");
             var journal  = MakeModule<FieldJournalUI>("Journal");
-            var quiz      = MakeModule<QuizManager>("Quiz");
+            var quiz     = MakeModule<QuizManager>("Quiz");
             var reward   = MakeModule<RewardScreenUI>("Reward");
             var auth     = MakeModule<AuthUI>("Auth");
             var leaderboard = MakeModule<LeaderboardUI>("Leaderboard");
@@ -88,7 +89,8 @@ namespace WildlifeAdventure
         T MakeModule<T>(string name) where T : Component
         {
             var go = new GameObject(name);
-            return go.AddComponent<T>();
+            go.AddComponent<T>();
+            return go.GetComponent<T>();
         }
 
         void SetupCamera(out Camera cam, out CameraFollow follow)
