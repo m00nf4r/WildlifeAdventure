@@ -58,10 +58,13 @@ namespace WildlifeAdventure
             // How to play
             UIFactory.LabelAt(root,
                 "Move: Arrow Keys / WASD   •   Scan or Clean: E   •   Field Journal: J",
-                20, UIFactory.Ink, 1100, 30, 0, -312);
+                20, UIFactory.Ink, 1100, 30, 0, -300);
 
             UIFactory.LabelAt(root, "An educational game for biodiversity awareness",
-                16, new Color(0.3f, 0.4f, 0.3f), 900, 24, 0, -342);
+                16, new Color(0.3f, 0.4f, 0.3f), 900, 24, 0, -326);
+
+            UIFactory.LabelAt(root, "Illustrated by Deeja & Myn",
+                18, UIFactory.GreenDark, 900, 26, 0, -350, TextAnchor.MiddleCenter, FontStyle.Bold);
 
             RefreshBest();
             Hide();

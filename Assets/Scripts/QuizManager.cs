@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -25,6 +26,9 @@ namespace WildlifeAdventure
         bool answered;
         Action<int> onComplete;
 
+        // A freshly shuffled copy of the questions for the current play-through.
+        readonly List<QuizQuestion> quiz = new List<QuizQuestion>();
+
         readonly char[] letters = { 'A', 'B', 'C', 'D' };
 
         public void Build()
@@ -33,8 +37,22 @@ namespace WildlifeAdventure
             canvas.transform.SetParent(transform, false);
             var root = canvas.transform;
 
+            // Soft colour fallback (shows if the background image is missing).
             UIFactory.Panel2(root, UIFactory.Hex("E8F3E0"),
                 Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, "Bg");
+
+            // Nature scene background, stretched to fill the screen.
+            var sceneGo = new GameObject("BgScene");
+            sceneGo.transform.SetParent(root, false);
+            var sceneImg = sceneGo.AddComponent<Image>();
+            sceneImg.sprite = Resources.Load<Sprite>("Sprites/quiz_bg");
+            sceneImg.preserveAspect = false;
+            sceneImg.raycastTarget = false;
+            var sceneRt = sceneGo.GetComponent<RectTransform>();
+            sceneRt.anchorMin = Vector2.zero;
+            sceneRt.anchorMax = Vector2.one;
+            sceneRt.offsetMin = Vector2.zero;
+            sceneRt.offsetMax = Vector2.zero;
 
             // Header
             UIFactory.Panel2(root, UIFactory.Green,
@@ -80,17 +98,61 @@ namespace WildlifeAdventure
             onComplete = complete;
             index = 0;
             correctCount = 0;
+            BuildShuffledQuiz();
             canvas.gameObject.SetActive(true);
             ShowQuestion();
+        }
+
+        /// <summary>
+        /// Makes a fresh copy of the question bank, shuffles the question order,
+        /// and shuffles the answer options within each question, so every
+        /// play-through is different. The source comes from Firebase when the
+        /// player is online (loaded into WildlifeDatabase.Quiz), or the built-in
+        /// questions when offline.
+        /// </summary>
+        void BuildShuffledQuiz()
+        {
+            quiz.Clear();
+            var src = new List<QuizQuestion>(WildlifeDatabase.Quiz);
+
+            // Shuffle question order (Fisher-Yates).
+            for (int i = src.Count - 1; i > 0; i--)
+            {
+                int j = UnityEngine.Random.Range(0, i + 1);
+                var tmp = src[i]; src[i] = src[j]; src[j] = tmp;
+            }
+
+            foreach (var q in src) quiz.Add(ShuffleOptions(q));
+        }
+
+        QuizQuestion ShuffleOptions(QuizQuestion q)
+        {
+            if (q.options == null || q.options.Length < 4) return q;
+
+            int[] order = { 0, 1, 2, 3 };
+            for (int i = order.Length - 1; i > 0; i--)
+            {
+                int j = UnityEngine.Random.Range(0, i + 1);
+                int tmp = order[i]; order[i] = order[j]; order[j] = tmp;
+            }
+
+            var opts = new string[4];
+            int newCorrect = 0;
+            for (int i = 0; i < 4; i++)
+            {
+                opts[i] = q.options[order[i]];
+                if (order[i] == q.correctIndex) newCorrect = i;
+            }
+            return new QuizQuestion(q.question, opts, newCorrect, q.explanation);
         }
 
         void ShowQuestion()
         {
             answered = false;
             feedbackPanel.SetActive(false);
-            var q = WildlifeDatabase.Quiz[index];
+            var q = quiz[index];
             questionText.text = q.question;
-            progressText.text = "Question " + (index + 1) + " of " + WildlifeDatabase.Quiz.Count;
+            progressText.text = "Question " + (index + 1) + " of " + quiz.Count;
             scoreText.text = "★ " + correctCount * 100;
 
             for (int i = 0; i < 4; i++)
@@ -106,7 +168,7 @@ namespace WildlifeAdventure
         {
             if (answered) return;
             answered = true;
-            var q = WildlifeDatabase.Quiz[index];
+            var q = quiz[index];
 
             for (int i = 0; i < 4; i++) optionButtons[i].interactable = false;
 
@@ -126,14 +188,14 @@ namespace WildlifeAdventure
             }
 
             scoreText.text = "★ " + correctCount * 100;
-            nextLabel.text = (index + 1 >= WildlifeDatabase.Quiz.Count) ? "See Results" : "Next";
+            nextLabel.text = (index + 1 >= quiz.Count) ? "See Results" : "Next";
             feedbackPanel.SetActive(true);
         }
 
         void Next()
         {
             index++;
-            if (index >= WildlifeDatabase.Quiz.Count)
+            if (index >= quiz.Count)
             {
                 canvas.gameObject.SetActive(false);
                 onComplete?.Invoke(correctCount);

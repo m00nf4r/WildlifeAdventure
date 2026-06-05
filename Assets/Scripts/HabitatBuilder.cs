@@ -123,47 +123,72 @@ namespace WildlifeAdventure
 
         void BuildWildlife()
         {
-            // species id -> (x position, scale)
-            var placements = new (string id, float x, float scale)[]
+            // Per-species display scale (bigger animals stay bigger).
+            var scaleById = new Dictionary<string, float>
             {
-                ("malayan_tapir",   7f,  0.9f),
-                ("asian_elephant", 16f,  1.7f),
-                ("malayan_tiger",  25f,  0.9f),
-                ("sumatran_rhino", 35f,  0.6f),
+                { "malayan_tapir",  0.9f },
+                { "asian_elephant", 1.7f },
+                { "malayan_tiger",  0.9f },
+                { "sumatran_rhino", 0.6f },
             };
 
-            foreach (var p in placements)
+            // Take the active species list and shuffle the order each play.
+            var species = new List<WildlifeData>(WildlifeDatabase.Species);
+            for (int i = species.Count - 1; i > 0; i--)
             {
-                var data = WildlifeDatabase.GetById(p.id);
-                if (data == null) continue;
+                int j = Random.Range(0, i + 1);
+                var tmp = species[i]; species[i] = species[j]; species[j] = tmp;
+            }
+
+            // Spread them across the level in evenly-sized slots, then jitter
+            // within each slot so positions differ every time but never overlap
+            // or block the quiz totem at the far right.
+            int n = species.Count;
+            if (n == 0) return;
+            float leftX = worldMinX + 6f;
+            float rightX = worldMaxX - 5f;
+            float slot = (rightX - leftX) / n;
+
+            for (int i = 0; i < n; i++)
+            {
+                var data = species[i];
+                float baseX = leftX + slot * (i + 0.5f);
+                float jitter = Random.Range(-slot * 0.30f, slot * 0.30f);
+                float x = Mathf.Clamp(baseX + jitter, worldMinX + 3f, worldMaxX - 4f);
+
+                float scale;
+                if (!scaleById.TryGetValue(data.id, out scale)) scale = 0.9f;
+
                 var go = new GameObject("Wildlife_" + data.id);
                 go.transform.SetParent(root.transform, false);
-                go.transform.position = new Vector3(p.x, groundY + 0.6f, 0f);
+                go.transform.position = new Vector3(x, groundY + 0.6f, 0f);
                 var e = go.AddComponent<WildlifeEntity>();
-                e.Init(data, p.scale);
+                e.Init(data, scale);
                 wildlife.Add(e);
             }
         }
 
         void BuildPollution()
         {
-            var items = new (string sprite, string label, float x, float scale)[]
+            // Pollution type table (sprite + friendly label + scale).
+            var types = new (string sprite, string label, float scale)[]
             {
-                ("plastic",        "plastic bag",    4f,   0.55f),
-                ("plastic_bottle", "plastic bottle", 12f,  0.5f),
-                ("glass_bottle",   "glass bottle",   20f,  0.5f),
-                ("plastic",        "plastic bag",    29f,  0.55f),
-                ("plastic_bottle", "plastic bottle", 38f,  0.5f),
-                ("glass_bottle",   "glass bottle",   31f,  0.5f),
+                ("plastic",        "plastic bag",    0.55f),
+                ("plastic_bottle", "plastic bottle", 0.5f),
+                ("glass_bottle",   "glass bottle",   0.5f),
             };
 
-            foreach (var it in items)
+            // Random count and random positions/types each play.
+            int count = Random.Range(5, 8);   // 5, 6 or 7 pieces of litter
+            for (int i = 0; i < count; i++)
             {
+                var t = types[Random.Range(0, types.Length)];
+                float x = Random.Range(worldMinX + 3f, worldMaxX - 4f);
                 var go = new GameObject("Pollution");
                 go.transform.SetParent(root.transform, false);
-                go.transform.position = new Vector3(it.x, groundY + 0.35f, 0f);
+                go.transform.position = new Vector3(x, groundY + 0.35f, 0f);
                 var p = go.AddComponent<PollutionItem>();
-                p.Init(it.sprite, it.label, it.scale);
+                p.Init(t.sprite, t.label, t.scale);
             }
         }
 
