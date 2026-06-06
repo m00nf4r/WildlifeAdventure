@@ -165,8 +165,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WildlifeAdventure.GameBootstrap
   cameraSize: 5
   playerScale: 0.65
-  firebaseApiKey: 
-  firebaseProjectId: 
+  firebaseApiKey: AIzaSyDk59zhzuz-4JHjKjuYVQ7MC_aImrZimlA
+  firebaseProjectId: ' wildlife-awareness-game'
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

@@ -103,12 +103,17 @@ namespace WildlifeAdventure
             ShowQuestion();
         }
 
+        // How many questions to ask per play-through. The full pool is shuffled
+        // first, then the top N are taken, so each play shows a different set.
+        const int QuestionsPerPlay = 5;
+
         /// <summary>
         /// Makes a fresh copy of the question bank, shuffles the question order,
-        /// and shuffles the answer options within each question, so every
-        /// play-through is different. The source comes from Firebase when the
-        /// player is online (loaded into WildlifeDatabase.Quiz), or the built-in
-        /// questions when offline.
+        /// shuffles the answer options within each question, and keeps only the
+        /// first QuestionsPerPlay of them — so every play-through is a different,
+        /// non-repeating set. The source comes from Firebase when the player is
+        /// online (loaded into WildlifeDatabase.Quiz), or the built-in questions
+        /// when offline.
         /// </summary>
         void BuildShuffledQuiz()
         {
@@ -122,7 +127,9 @@ namespace WildlifeAdventure
                 var tmp = src[i]; src[i] = src[j]; src[j] = tmp;
             }
 
-            foreach (var q in src) quiz.Add(ShuffleOptions(q));
+            // Keep only the first N (or all of them, if the pool is smaller).
+            int take = Mathf.Min(QuestionsPerPlay, src.Count);
+            for (int i = 0; i < take; i++) quiz.Add(ShuffleOptions(src[i]));
         }
 
         QuizQuestion ShuffleOptions(QuizQuestion q)
