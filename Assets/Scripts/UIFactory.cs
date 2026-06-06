@@ -27,8 +27,11 @@ namespace WildlifeAdventure
         public static Font GetFont()
         {
             if (_font != null) return _font;
-            // Unity 2022+ ships LegacyRuntime.ttf; older versions use Arial.ttf.
-            _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            // Pixel font: put a .ttf named "PixelFont.ttf" into
+            // Assets/Resources/Fonts/ and the whole game uses it.
+            _font = Resources.Load<Font>("Fonts/PixelFont");
+            // Fallbacks if no pixel font has been added yet.
+            if (_font == null) _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             if (_font == null) _font = Resources.GetBuiltinResource<Font>("Arial.ttf");
             return _font;
         }
