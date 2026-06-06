@@ -60,18 +60,7 @@ Discover all the animals to unlock the **Ranger Outpost** quiz at the far right 
 The entire game is generated from code at runtime by a single `GameBootstrap` script — there is no hand-authored scene, which keeps the project lightweight and version-control friendly.
 
 ---
-
-## 🚀 Getting started (run it locally)
-
-1. Install **Unity 6** (via Unity Hub).
-2. Open the project in Unity (it will compile automatically).
-3. Make sure the **Unity UI (uGUI)** package is installed: *Window → Package Manager → Unity Registry → search "uGUI" → Install*.
-4. Set the input system: *Edit → Project Settings → Player → Other Settings → **Active Input Handling → Input Manager (Old)*** (the game uses the classic Input Manager).
-5. In the scene, create an empty **GameObject** and add the **`GameBootstrap`** component to it (*Add Component → GameBootstrap*).
-6. Press **Play**, then open the **Game** tab.
-
-With the Firebase fields left blank, the game runs in **offline mode** — perfect for a quick test.
-
+Play here on Unity Play: https://play.unity.com/en/games/52ed64fc-b162-4f79-9ed7-05987446f9c6/docs
 ---
 
 ## ☁️ Firebase setup (for the online version)
