@@ -74,4 +74,8 @@ crashlytics-build.properties
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
 
+# Unity crash recovery artifacts
+/[Aa]ssets/_Recovery/
+/[Aa]ssets/_Recovery.meta
+
 # End of https://www.toptal.com/developers/gitignore/api/unity
