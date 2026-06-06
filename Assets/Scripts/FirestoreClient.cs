@@ -120,6 +120,16 @@ namespace WildlifeAdventure
             if (m.ContainsKey("doubleValue"))    return m["doubleValue"]?.ToString();
             if (m.ContainsKey("booleanValue"))   return m["booleanValue"]?.ToString();
             if (m.ContainsKey("timestampValue")) return m["timestampValue"]?.ToString();
+            if (m.ContainsKey("arrayValue"))
+            {
+                // Join array elements with a unit-separator so the scalar map can
+                // still hold them; ToStrArray() splits them back out.
+                var arr = MiniJson.Arr(MiniJson.Get(m["arrayValue"], "values"));
+                if (arr == null) return "";
+                var parts = new List<string>();
+                foreach (var el in arr) parts.Add(ScalarOf(el) ?? "");
+                return string.Join("\u001F", parts);
+            }
             return null;
         }
 
@@ -143,6 +153,15 @@ namespace WildlifeAdventure
             string raw;
             if (f != null && f.TryGetValue(key, out raw) && raw != null) return raw;
             return fallback;
+        }
+
+        /// <summary>Reads an array field (decoded by ScalarOf into a joined string).</summary>
+        public static string[] ToStrArray(Dictionary<string, string> f, string key)
+        {
+            string raw;
+            if (f != null && f.TryGetValue(key, out raw) && !string.IsNullOrEmpty(raw))
+                return raw.Split('\u001F');
+            return new string[0];
         }
     }
 }

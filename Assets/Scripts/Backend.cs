@@ -102,17 +102,38 @@ namespace WildlifeAdventure
                         var ordered = new List<(int order, QuizQuestion q)>();
                         foreach (var f in docs)
                         {
-                            var opts = new[]
+                            // Options: prefer an "options" array (the schema in the
+                            // Firestore console); fall back to optionA-D scalars.
+                            var arr = FirestoreClient.ToStrArray(f, "options");
+                            string[] opts;
+                            if (arr.Length >= 2)
                             {
-                                FirestoreClient.ToStr(f, "optionA"),
-                                FirestoreClient.ToStr(f, "optionB"),
-                                FirestoreClient.ToStr(f, "optionC"),
-                                FirestoreClient.ToStr(f, "optionD")
-                            };
+                                opts = new string[4];
+                                for (int k = 0; k < 4; k++) opts[k] = k < arr.Length ? arr[k] : "";
+                            }
+                            else
+                            {
+                                opts = new[]
+                                {
+                                    FirestoreClient.ToStr(f, "optionA"),
+                                    FirestoreClient.ToStr(f, "optionB"),
+                                    FirestoreClient.ToStr(f, "optionC"),
+                                    FirestoreClient.ToStr(f, "optionD")
+                                };
+                            }
+
+                            // Correct-answer index: accept either field name.
+                            int correct = f.ContainsKey("correctAnswerIndex")
+                                ? FirestoreClient.ToInt(f, "correctAnswerIndex")
+                                : FirestoreClient.ToInt(f, "correctIndex");
+
+                            // Explanation: accept "factHint" or "explanation".
+                            string expl = f.ContainsKey("factHint")
+                                ? FirestoreClient.ToStr(f, "factHint")
+                                : FirestoreClient.ToStr(f, "explanation");
+
                             var q = new QuizQuestion(
-                                FirestoreClient.ToStr(f, "question"), opts,
-                                FirestoreClient.ToInt(f, "correctIndex"),
-                                FirestoreClient.ToStr(f, "explanation"));
+                                FirestoreClient.ToStr(f, "question"), opts, correct, expl);
                             ordered.Add((FirestoreClient.ToInt(f, "order"), q));
                         }
                         ordered.Sort((a, b) => a.order.CompareTo(b.order));
@@ -267,21 +288,10 @@ namespace WildlifeAdventure
                     ok => { if (!ok) allOk = false; });
             }
 
-            var defaultQuiz = WildlifeDatabase.DefaultQuiz();
-            for (int i = 0; i < defaultQuiz.Count; i++)
-            {
-                var q = defaultQuiz[i];
-                var fields = new Dictionary<string, object>
-                {
-                    { "question", q.question },
-                    { "optionA", q.options[0] }, { "optionB", q.options[1] },
-                    { "optionC", q.options[2] }, { "optionD", q.options[3] },
-                    { "correctIndex", q.correctIndex },
-                    { "explanation", q.explanation }, { "order", i }
-                };
-                yield return FirestoreClient.PatchDocument("quizQuestions/q" + (i + 1), fields,
-                    ok => { if (!ok) allOk = false; });
-            }
+            // NOTE: Quiz questions are authored directly in the Firestore console
+            // (the quizQuestions collection), so seeding intentionally does NOT
+            // write quiz documents — that would add duplicate default questions
+            // on top of the ones already entered.
 
             done(allOk);
         }
